@@ -13,7 +13,7 @@ pub trait UdevSyncAction {
     fn is_active(&self) -> bool;
 }
 
-#[cfg(not(target_os = "android"))]
+#[cfg(all(not(target_os = "android"), feature = "udev"))]
 pub mod sync_semaphore {
     use nix::libc::{
         c_int,
@@ -494,7 +494,7 @@ pub mod sync_semaphore {
         }
     }
 }
-#[cfg(target_os = "android")]
+#[cfg(any(target_os = "android", not(feature = "udev")))]
 pub mod sync_noop {
     use super::UdevSyncAction;
     use crate::{core::dm_ioctl as dmi, result::DmResult};
@@ -530,7 +530,7 @@ pub mod sync_noop {
 }
 
 cfg_if! {
-    if #[cfg(target_os = "android")] {
+    if #[cfg(any(target_os = "android", not(feature = "udev")))] {
         pub use self::sync_noop::UdevSync;
     } else {
         pub use self::sync_semaphore::UdevSync;
